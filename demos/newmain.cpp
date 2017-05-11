@@ -1,6 +1,6 @@
-#define private public // todo
 #include "nothread/context.hpp"
 
+#include <iostream>
 #include <stddef.h> // todo
 
 using namespace std;
@@ -11,16 +11,11 @@ execution_context say_hello(execution_context root, int id) {
     root = root.resume();
     std::cout << "Hello " << id + 1 << "\n";
     root = root.resume();
-    std::cout << "Hello " << id << "\n";
+    std::cout << "Hello " << id + 2 << "\n";
     return root;
 }
 
 int main() {
-    cout << offsetof(execution_context, p_ret) << " " << offsetof(execution_context, p_stack) <<
-        " " << offsetof(execution_context, p_saved) << " " << offsetof(execution_context, p_caller_context) << "\n";
-
-    cout << sizeof(execution_context) << "\n";
-
     execution_context ctx = call(say_hello, 2);
     std::cout << "returned\n";
     ctx = ctx.resume();

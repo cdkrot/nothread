@@ -1,9 +1,6 @@
 #ifndef NOTHREAD_CONTEXT_INCL
 #define NOTHREAD_CONTEXT_INCL
 
-#include <iostream> // TODO (DEBUG)
-#include <execinfo.h> // TODO
-
 #include <utility>
 #include <tuple>
 #include "nothread/exceptions.hpp"
@@ -16,7 +13,7 @@ namespace nothread {
     namespace detail {
         template <typename Func, typename... Args>
         void bootstrap(Func* func, std::tuple<Args...>* args, execution_context* ctx);
-    };
+    }
     
     class execution_context {
     public:
@@ -41,7 +38,6 @@ namespace nothread {
         }
 
         void swap(execution_context& other) {
-            std::cout << this << " <-> " << &other << "\n";
             std::swap(p_ret,            other.p_ret);
             std::swap(p_stack,          other.p_stack);
             std::swap(p_saved,          other.p_saved);
@@ -57,7 +53,7 @@ namespace nothread {
         }
         
         execution_context resume() {
-            resume_advanced(false);
+            return resume_advanced(false);
         }
         
 private:
@@ -68,38 +64,24 @@ private:
         }
 
         execution_context resume_advanced(execution_context* self) {
-            if (not operator()()) {
-                std::cout << "Addr: " << this << "\n";
+            if (not operator()())
                 throw invalid_resume_error();
-            }
             
-            execution_context* p_ret = nullptr;
-            self->p_caller_context = &p_ret;
-            
-            using std::cout;
-            
-            cout << "Switching context " << &self << " -> " << this << "\n";
-            cout << "this->p_stack=" << this->p_stack << " " << "this->p_ret=" << this->p_ret
-                 << " " << "this->p_caller_ctx=" << this->p_caller_context << ":" << *(this->p_caller_context) << "\n";
-            cout << "self->p_caller_ctx=" << self->p_caller_context << ":" << *(self->p_caller_context) << "\n\n"; 
+            execution_context* res = nullptr;
+            self->p_caller_context = &res;
             
             NOTHREAD_IMPL_switch_context(self, this);
 
             this->invalidate();
             self->invalidate();
             
-            return std::move(*p_ret);;
+            return std::move(*res);;
         }
         
         void invalidate() {
             p_ret            = nullptr;
             p_stack          = nullptr;
             p_caller_context = nullptr;
-            
-            std::cout << "Called invalidate for " << this << "in: \n"; // TODO
-//            void* tmpbuf[100];
-//            int n = backtrace(tmpbuf, 100);
-//            backtrace_symbols_fd(tmpbuf, n, 1);
         }
         
         void* p_ret;   /* address where you should jump for return */
@@ -137,7 +119,7 @@ private:
         execution_context self, target;
         
         std::tuple<Args...> tup(std::forward<Args...>(args...));
-        void** mem  = (void**)(new char[8192] + 8192 - 160);
+        void** mem  = (void**)(new char[8192] + 8192);
         std::fill((char*)mem - 8192, (char*)mem, 0x01);
         
         mem[-1] = (void*)(&detail::bootstrap<Func, Args...>);
@@ -151,6 +133,6 @@ private:
         auto res = target.resume_advanced(&self);
         return res;
     }
-};
+}
 
 #endif // NOTHREAD_CONTEXT_INCL

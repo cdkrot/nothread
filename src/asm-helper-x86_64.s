@@ -13,12 +13,14 @@ NOTHREAD_IMPL_deep_bootstrap:
         pop %rsi
         pop %rdi
         pop %rcx
-	mov %rsp, %rbp
 
-	push %rbp
-	push %rbp
+	// ABI standard requires rsp + 0x08 to be aligned by 16(32) bytes,
+	// So do it.
 	
+	sub $0x20, %rsp
+	and $0xffffffffffffffe0, %rsp
 	mov %rsp, %rbp
+	push %rbp
         jmp *%rcx
 
 // void switch_context(void* self, void* target)

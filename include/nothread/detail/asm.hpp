@@ -6,7 +6,7 @@
 
 namespace nothread {
     class execution_context;
-};
+}
 
 /* Every arch should implement these two functions (probably in assembler)
  *
@@ -21,6 +21,6 @@ extern "C" {
     void NOTHREAD_IMPL_deep_bootstrap(void);
     void NOTHREAD_IMPL_switch_context(nothread::execution_context* self,
                                       nothread::execution_context* target);
-};
+}
 
 #endif // NOTHREAD_DETAIL_ASM_INCL
