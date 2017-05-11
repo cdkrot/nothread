@@ -12,7 +12,7 @@ execution_context say_hello(execution_context root, int id) {
     std::cout << "Hello " << id + 1 << "\n";
     root = root.resume();
     std::cout << "Hello " << id << "\n";
-    return std::move(root);
+    return root;
 }
 
 int main() {

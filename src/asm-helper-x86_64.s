@@ -24,7 +24,8 @@ NOTHREAD_IMPL_deep_bootstrap:
 // void switch_context(void* self, void* target)
 // self=%rdi, target=%rsi
 NOTHREAD_IMPL_switch_context:
-        push %rbp	
+        push %rbp
+	mov  %rsp, %rbp
 	push %rbx
 	push %r12
 	push %r13

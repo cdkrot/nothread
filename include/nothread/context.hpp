@@ -64,7 +64,7 @@ private:
         execution_context resume_advanced(bool kill_self) {
             execution_context self;
             auto res = resume_advanced(&self);
-            return std::move(res);;
+            return std::move(res);
         }
 
         execution_context resume_advanced(execution_context* self) {
@@ -72,7 +72,7 @@ private:
                 std::cout << "Addr: " << this << "\n";
                 throw invalid_resume_error();
             }
-                        
+            
             execution_context* p_ret = nullptr;
             self->p_caller_context = &p_ret;
             
@@ -86,13 +86,16 @@ private:
             NOTHREAD_IMPL_switch_context(self, this);
 
             this->invalidate();
+            self->invalidate();
             
             return std::move(*p_ret);;
         }
         
         void invalidate() {
-            p_ret = nullptr;
-
+            p_ret            = nullptr;
+            p_stack          = nullptr;
+            p_caller_context = nullptr;
+            
             std::cout << "Called invalidate for " << this << "in: \n"; // TODO
 //            void* tmpbuf[100];
 //            int n = backtrace(tmpbuf, 100);
@@ -134,8 +137,8 @@ private:
         execution_context self, target;
         
         std::tuple<Args...> tup(std::forward<Args...>(args...));
-        void** mem  = (void**)(new char[8192] + 8192);
-        std::fill((char*)mem - 8192, (char*)mem, 0xE2);
+        void** mem  = (void**)(new char[8192] + 8192 - 160);
+        std::fill((char*)mem - 8192, (char*)mem, 0x01);
         
         mem[-1] = (void*)(&detail::bootstrap<Func, Args...>);
         mem[-2] = (void*)(&func);
