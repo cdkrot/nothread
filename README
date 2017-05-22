@@ -1,8 +1,8 @@
-g++ demos/newmain.cpp src/asm-helper-x86_64.s -Iinclude -o nw -Wall -Wextra -std=c++14 -pedantic
+g++ demos/contexts.cpp src/asm-helper-x86_64.s -Iinclude -o nw -Wall -Wextra -std=c++14 -pedantic
 
 Что есть:
 - Реализация execution_context, предполагаемого примитива для переключения между разными состояними выполнения.
-- Пример использования в demos/newmain.cpp
+- Пример использования в demos/contexts.cpp
 
 Чего пока нет
 - Поддержки стандарта C++11.

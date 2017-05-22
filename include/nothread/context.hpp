@@ -29,15 +29,15 @@ namespace nothread {
         execution_context& operator=(const execution_context& other) = delete;
 
         /* but move is allowed */
-        execution_context(execution_context&& other): execution_context() {
+        execution_context(execution_context&& other) noexcept : execution_context() {
             this->swap(other);
         }
-        execution_context& operator=(execution_context&& other) {
+        execution_context& operator=(execution_context&& other) noexcept {
             this->swap(other);
             return *this;
         }
 
-        void swap(execution_context& other) {
+        void swap(execution_context& other) noexcept {
             std::swap(p_ret,            other.p_ret);
             std::swap(p_stack,          other.p_stack);
             std::swap(p_saved,          other.p_saved);
@@ -47,20 +47,35 @@ namespace nothread {
         bool operator()() const noexcept {
             return p_ret != nullptr;
         }
-
+        
         bool operator!() const noexcept {
             return not operator()();
+        }
+        
+        bool has_value() const noexcept {
+            return p_saved != nullptr;
+        }
+
+        template <typename T>
+        T get_value() {
+            return std::forward<T>(*(T*)(p_saved));
         }
         
         execution_context resume() {
             return resume_advanced(false);
         }
+
+        template <typename T>
+        execution_context resume(T arg) {
+            execution_context self;
+            self.p_saved = &arg;
+            return resume_advanced(&self);
+        }
         
 private:
         execution_context resume_advanced(bool kill_self) {
             execution_context self;
-            auto res = resume_advanced(&self);
-            return std::move(res);
+            return resume_advanced(&self);
         }
 
         execution_context resume_advanced(execution_context* self) {

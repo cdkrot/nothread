@@ -14,28 +14,27 @@ NOTHREAD_IMPL_deep_bootstrap:
         pop %rdi
         pop %rcx
 
-	// ABI standard requires rsp + 0x08 to be aligned by 16(32) bytes,
-	// So do it.
-	
-	sub $0x20, %rsp
-	and $0xffffffffffffffe0, %rsp
-	mov %rsp, %rbp
-	push %rbp
+        // ABI standard requires rsp + 0x08 to be aligned by 16(32) bytes,
+        // So do it.
+        
+        and $0xffffffffffffffe0, %rsp
+        mov %rsp, %rbp
+        push %rbp
         jmp *%rcx
 
 // void switch_context(void* self, void* target)
 // self=%rdi, target=%rsi
 NOTHREAD_IMPL_switch_context:
         push %rbp
-	mov  %rsp, %rbp
-	push %rbx
-	push %r12
-	push %r13
-	push %r14
-	push %r15
-
-	leaq switch_context_return(%rip), %rax
-	movq %rax, 0x0(%rdi) /* save to self->p_ret */
+        mov  %rsp, %rbp
+        push %rbx
+        push %r12
+        push %r13
+        push %r14
+        push %r15
+	
+        leaq switch_context_return(%rip), %rax
+        movq %rax, 0x0(%rdi) /* save to self->p_ret */
         movq %rsp, 0x8(%rdi) /* save to self->p_stack */
 
         movq 0x18(%rsi), %rax
