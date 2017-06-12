@@ -7,23 +7,26 @@
 
         
 // extracts arguments for bootstrap from stack and hands execution there.
-// expected stack: [pbootstrap, func, args, ctx] (TAIL), no args via registers.
+// expected stack: [pbootstrap, alloc, func, args, ctx] (TAIL), no args via registers.
 NOTHREAD_IMPL_deep_bootstrap:
+        pop %rcx
         pop %rdx
         pop %rsi
         pop %rdi
-        pop %rcx
+        
+        pop %rax
 
+        
         // ABI standard requires rsp + 0x08 to be aligned by 16(32) bytes,
         // So do it.
         
         and $0xffffffffffffffe0, %rsp
         mov %rsp, %rbp
         push %rbp
-        jmp *%rcx
+        jmp *%rax
 
-// void switch_context(void* self, void* target)
-// self=%rdi, target=%rsi
+// void switch_context(void* self, void* target, size_t flags)
+// self=%rdi, target=%rsi, flags=%rdx
 NOTHREAD_IMPL_switch_context:
         push %rbp
         mov  %rsp, %rbp
@@ -51,6 +54,7 @@ switch_context_return:
         pop %r12
         pop %rbx
         pop %rbp
+        mov %rdx, %rax
         retq
 
 /* No need for executable stack.  */

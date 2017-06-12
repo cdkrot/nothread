@@ -1,0 +1,12 @@
+Requirements:
+- C++ compiler with c++14 support (g++ is recommended)
+- Native support implemented now only for x86_64 system V ABI (any x86_64 *nix)
+
+Building should be as easy, as running cmake, for example you can run following:
+
+mkdir build && cd build && cmake .. && make
+
+This builds
+- The library itself (build/libnothread.a)
+- All demos (which will be in build/demos)
+- Test binary (build/nothread-test)

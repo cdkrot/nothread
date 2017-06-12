@@ -1,0 +1,145 @@
+Public aplication programming interface description
+===================================================
+
+nothread/context.hpp
+--------------------
+
+More generic and "low level" api, all is centered on execution_context class,
+which represents handle to some suspended "state" of computation, which can be resumed later.
+
+# Member functions.
+
+- execution_context()
+Constructs an empty "null" object, which doesn't allow to resume anything
+
+- move-ctor and move assignment are provided.
+
+- copy-ctor and copy assignment are deleted.
+
+- ~execution_context()
+Tries to destruct object by calling abort(), if this raises an exception or
+context refuses to abort, then std::terminate is called.
+
+- operator bool() const noexcept
+Returns if the object contains reference to resumeable state.
+
+- bool operator!() const noexcept
+Negation of above
+
+- execution_context resume()
+Resumes execution of context, returns the context which resumed "our" context.
+
+Throws invalid_resume_error when trying to resume "null" and execution_aborted
+is throwed on abort() (see documentation on abort() function)
+
+Note, that since resume() continues execution, resumed object becomes pointing
+to allready passed state, and hence invalidated.
+In other words, any resumed object changes it's state to "null".
+
+- template <typename T> execution_context resume(T arg);
+Returns execution of context and saves the value for it. In all other same as
+version without arg.
+
+- bool has_value();
+Returns true, if this context provided some value when resuming "our" context.
+Returns false for "null" context.
+
+- template <typename T> T get_value()
+Returns saved value, assuming that it's type was T.
+Type verification is not performed, so you should query only type, which was put in.
+If you need it, please refer to std::any.
+
+Behaviour is not defined if (any of below)
+- type saved and loaded differ
+- attempt to load something, when no data was saved
+- when context is "null"
+
+- execution_context abort()
+The context is woken up on the return of resume() function, which throws execution_aborted
+error, which is expected to propagate up and force context to exit, in such case control returns
+to this context and empty context returned.
+
+If this exception is caught and handled in custom way, then the behaviour is same as in resume() function.
+
+If called on context, which represents main() function or any other execution state created without call()
+the behaviour is undefined.
+
+Undefined behaviour for "null" context.
+
+# Free (non-member) functions of module.
+
+execution_context call(Func func, Args... args);
+execution_context call_alloc(Alloc alloc, Func func, Args... args);
+
+Create new execution context from specified function.
+Second version uses custom allocator, please see section below about it.
+
+nothread/coroutine.hpp
+----------------------
+
+Coroutines are "upper" level nothreading api, implemented over contexts.
+
+Coroutine must must be callable similar to function prototype
+void func(nothread::yield_t<Type>& yield, Args...);
+
+Where Type is a type of coroutine and Args... are any args you want.
+Inside function you can call yield(object), which will save object and pass
+to other side. Note, that this transfer is typecheked, instead of previous api.
+
+yield_t is not copyable and not movable, you should work with it as mutable reference.
+yield_t contains execution_context of parent and reference to coroutine, which will
+recieve all yielded objects.
+
+yield_t is constructed by coroutine internals and not constructible by hand.
+
+How to invoke a coroutine?
+There is a coroutine constructor coroutine<T>::coroutine(Func func, Args... args),
+which takes the func and args to invoke, if you want custom stack allocation please
+
+use static member function coroutine<T> coroutine<T>::with_alloc(Alloc alloc, Func func, Args... args).
+
+How to use coroutine? Coroutine provides input_iterator facility, so
+it's usage is as simple as range based for loop.
+
+But it is not required to iterate over all elements at once, feel free to do what you want.
+
+In short summary, coroutine class provides begin() and end() member functions.
+
+One more note, in some languages it is possible for one coroutine to invoke other coroutine
+and "yield-from" all elements. You can achieve by simply passing your yield variable there.
+
+
+Allocators
+----------
+
+It is possible to perform custom memory allocation for call/coroutine.
+How to?
+
+You need to implement special "stack" class. It can be seen as a owning reference to stack
+used for contexts.
+
+Requirements for class: 
+- Class must have destructor, which deletes the stack.
+- Class must implement move-constructor.
+- Class must implement "void* begin()" function (return of the stack).
+- Class must implement "size_t size()" function (size of the stack in bytes)
+- Both begin and end of stack are aligned by sizeof(void*) at least.
+
+List of standard stack allocators:
+
+default_stack: [secure] best secure allocator on this system
+mmap_stack:    [secure] allocates memory via unix system call mmap,mprotect.
+heap_stack:    [not secure] allocates memory on heap.
+
+All standard allocators provide static member function "size_t minimal()",
+which returns minimum possible stack size for this allocator.
+
+All standard allocators provide constructor taking size_t (size),
+and default constructor, which constructs stack of max(1MB, minimal()).
+(Remember, that size you provide must be divisible by sizeof(void*))
+
+What does "secure" mean?
+Secure means that active protection against stack overflow is garantueed.
+
+For example, in case of overflowing stack created on heap you likely will get memory corruption.
+In case of overflowing mmap_stack program will recieve sigsegv.
