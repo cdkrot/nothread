@@ -1,12 +1,21 @@
-g++ demos/contexts.cpp src/asm-helper-x86_64.s -Iinclude -o nw -Wall -Wextra -std=c++14 -pedantic
+Nothread lib.
 
-Что есть:
-- Реализация execution_context, предполагаемого примитива для переключения между разными состояними выполнения.
-- Пример использования в demos/contexts.cpp
+What?
+Set of utilities to implement "green threads", threads running on one physical thread.
+This is c++ library with small parts of asm.
 
-Чего пока нет
-- Поддержки стандарта C++11.
-- Некоторой вспомогательной функциональности execution_context (передача аргументов между контекстами).
-- Не освобождается память под стек после завершения выполнения.
-- Реализации корутин, поверх execution_context.
-- Тестов
+Who?
+Any x86_64 *nix machine.
+Support for others is possible yet not implemented.
+
+How?
+See building manual see docs/build.txt
+
+POC?
+See demos in demos/ folder.
+
+More?
+For verbose api reference please see doc/api.txt
+
+Still not?
+Please write to cdkrot at yandex dot ru with questions/comments/bugs.
